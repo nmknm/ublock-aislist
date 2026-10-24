@@ -25,6 +25,7 @@ CONTAINERS = [
     "ytd-playlist-renderer",
     "yt-lockup-view-model",
     # mobile (m.youtube.com)
+    "ytm-media-item",
     "ytm-rich-item-renderer",
     "ytm-video-with-context-renderer",
     "ytm-compact-video-renderer",
@@ -46,6 +47,20 @@ WARNING_STYLE = (
     "background: #b00020 !important; color: #fff !important; "
     "padding: 6px 12px !important; margin-bottom: 8px !important; "
     "border-radius: 8px !important; "
+    "font: 600 14px/1.3 Roboto, Arial, sans-serif !important"
+)
+
+# Same notice as a small floating label, for pages with no title to attach it to
+# (Shorts) and for the mobile site. Fixed to the viewport, never intercepts taps/clicks.
+FLOATING_STYLE = (
+    'content: "⚠ This channel is on the AiSList AI-content list" !important; '
+    "position: fixed !important; top: 60px !important; left: 50% !important; "
+    "transform: translateX(-50%) !important; z-index: 2147483647 !important; "
+    "pointer-events: none !important; max-width: 90vw !important; "
+    "box-sizing: border-box !important; text-align: center !important; "
+    "background: #b00020 !important; color: #fff !important; "
+    "padding: 6px 12px !important; border-radius: 8px !important; "
+    "box-shadow: 0 2px 8px rgba(0,0,0,.45) !important; "
     "font: 600 14px/1.3 Roboto, Arial, sans-serif !important"
 )
 
@@ -145,6 +160,17 @@ def main(src, dst):
     for i in range(0, len(sels), CHUNK):
         out.append("youtube.com##ytd-watch-metadata:has(#owner :is(%s)) #title::before:style(%s)"
                    % (",".join(sels[i:i + CHUNK]), WARNING_STYLE))
+
+    # 4) Warning on desktop Shorts (the active Short's channel) and on mobile video pages
+    #    (m.youtube.com, the channel under the video). One floating label for both; the
+    #    subjects (ytd-shorts / ytm-app) only exist on the matching site, and ytd-shorts is
+    #    hidden when you are not on Shorts, so the label does not linger on other pages.
+    out.append("! --- Warning on Shorts and on the mobile site ---")
+    for i in range(0, len(sels), CHUNK):
+        out.append(
+            "youtube.com##:is(ytd-shorts,ytm-app):has("
+            ":is(ytd-reel-video-renderer[is-active],ytm-slim-owner-renderer) :is(%s))"
+            "::before:style(%s)" % (",".join(sels[i:i + CHUNK]), FLOATING_STYLE))
 
     with open(dst, "w", encoding="utf-8", newline="\n") as fh:
         fh.write("\n".join(out) + "\n")
