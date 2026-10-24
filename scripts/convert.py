@@ -16,7 +16,9 @@ into a handful of compact regular expressions (a prefix tree, so a test costs ab
 as the length of the link) and lets uBO's procedural engine apply them, one quick test per link.
 Network filters (the "page blocked" screen) are hashed by uBO and stay cheap.
 
-Usage:  python3 -I scripts/convert.py INPUT OUTPUT
+Usage:  python3 -I scripts/convert.py INPUT OUTPUT [--compatible]
+
+--compatible writes the version for Brave, AdGuard and other blockers (see README).
 """
 import random
 import re
@@ -118,12 +120,15 @@ def _trie(words):
     return root
 
 
-def _esc(ch):
+def _esc(ch, fold=False):
     # Only "." can occur among the characters HANDLE_RE and the ID pattern allow.
-    return "[.]" if ch == "." else ch
+    if ch == ".":
+        return "[.]"
+    # fold: spell out case-insensitivity (a -> [aA]) for blockers whose regexes cannot take flags.
+    return "[%s%s]" % (ch, ch.upper()) if fold and ch.isalpha() and ch.upper() != ch else ch
 
 
-def _regex(node):
+def _regex(node, fold=False):
     kids = sorted(k for k in node if k != "")
     if not kids:
         return ""
@@ -133,9 +138,11 @@ def _regex(node):
     leaves = [k for k in kids if list(node[k].keys()) == [""]]
     if len(leaves) >= 2:
         plain = "".join(c for c in leaves if c not in ".-")
+        if fold:
+            plain += "".join(c.upper() for c in plain if c.isalpha() and c.upper() != c)
         alts.append("[%s%s%s]" % (plain, "." if "." in leaves else "", "-" if "-" in leaves else ""))
         kids = [k for k in kids if k not in leaves]
-    alts += [_esc(k) + _regex(node[k]) for k in kids]
+    alts += [_esc(k, fold) + _regex(node[k], fold) for k in kids]
     if len(alts) == 1 and not ends_here:
         return alts[0]
     # Group needed: several alternatives, or a word that may end here or continue.
@@ -185,9 +192,9 @@ def partition(words, size=CHUNK):
     return chunks
 
 
-def chunk_regex(words):
+def chunk_regex(words, fold=False):
     """One compact regex body for a set of words."""
-    return _regex(_trie(words))
+    return _regex(_trie(words), fold)
 
 
 def chunk_anchor(keys, base):
@@ -198,14 +205,27 @@ def chunk_anchor(keys, base):
     return "a" + parts[0] if len(parts) == 1 else "a:is(%s)" % ",".join(parts)
 
 
-def link_regex(body):
-    """Regex literal (uBO syntax) matching a page address that starts with one of the words."""
+# The compatible profile writes its patterns so that every blocker's regex engine takes them:
+#  - no "/" inside the literal (Brave splits the literal on every "/"): the "/" in "/@name" and
+#    "/channel/UC..." becomes "." (any character), and the end of the name is checked with a
+#    look-ahead instead of [/?#]. A name may continue with letters, digits, "_", ".", "-", "%".
+#  - no flags (AdGuard's regexes cannot carry any): case-insensitivity is spelled out as [aA].
+COMPAT_END = "(?![a-zA-Z0-9_.%-])"
+
+
+def link_regex(body, compat=False):
+    """Regex literal matching a page address that starts with one of the words."""
+    if compat:
+        return "/^.(%s)%s/" % (body.replace("/", "."), COMPAT_END)
     return "/^/(%s)([/?#]|$)/i" % body
 
 
-def self_check(words_all, bodies):
+def self_check(words_all, bodies, compat=False):
     """Fail loudly if the compact patterns do not match exactly the listed words."""
-    res = [re.compile("^/(%s)(?:[/?#]|$)" % b, re.IGNORECASE) for b in bodies]
+    if compat:
+        res = [re.compile("^.(%s)%s" % (b.replace("/", "."), COMPAT_END)) for b in bodies]
+    else:
+        res = [re.compile("^/(%s)(?:[/?#]|$)" % b, re.IGNORECASE) for b in bodies]
     wordset = set(words_all)
 
     def matches(text):
@@ -215,6 +235,8 @@ def self_check(words_all, bodies):
         for suffix in ("", "/videos", "?si=x"):
             if not matches("/" + w + suffix):
                 sys.exit("self-check failed: %r is not matched" % (w + suffix))
+            if compat and not (matches("/" + w.upper() + suffix) and matches("/" + w.swapcase() + suffix)):
+                sys.exit("self-check failed: %r is not matched in other letter cases" % (w + suffix))
     rng = random.Random(1234)
     sample = rng.sample(words_all, min(len(words_all), 4000))
     for w in sample:
@@ -227,7 +249,12 @@ def self_check(words_all, bodies):
             sys.exit("self-check failed: %r should not match" % cand)
 
 
-def main(src, dst):
+MARK_BOX = ("background: rgba(176,0,32,.10) !important; outline: 3px solid #b00020 !important; "
+            "outline-offset: -3px !important; border-radius: 12px !important")
+MARK_PAGE = "outline: 6px solid #b00020 !important; outline-offset: -6px !important"
+
+
+def main(src, dst, compat=False):
     handles, ids = [], []
     seen_handles, seen_ids = set(), set()
     skipped, dupes = [], 0
@@ -264,16 +291,24 @@ def main(src, dst):
     if not handles and not ids:
         sys.exit("No entries parsed from %s - refusing to write an empty list." % src)
 
+    if compat:
+        title = "AiSList - YouTube AI Slop Channels (compatible)"
+        desc = ("Version of the AiSList community blocklist for Brave, AdGuard and other blockers that "
+                "cannot show uBlock Origin's warning screen and text notices. Blocks the pages of, hides "
+                "videos from, and marks pages of YouTube channels flagged as AI-generated content.")
+    else:
+        title = "AiSList - YouTube AI Slop Channels (uBlock Origin)"
+        desc = ("uBlock Origin version of the AiSList community blocklist. Warns about, and hides "
+                "videos from, YouTube channels flagged as AI-generated content.")
     out = [
         "[Adblock Plus 2.0]",
-        "! Title: AiSList - YouTube AI Slop Channels (uBlock Origin)",
-        "! Description: uBlock Origin version of the AiSList community blocklist. "
-        "Warns about, and hides videos from, YouTube channels flagged as AI-generated content.",
+        "! Title: " + title,
+        "! Description: " + desc,
         "! Homepage: https://aisloplist.com",
         "! Source: https://github.com/Override92/AiSList",
         "! License: CC BY-NC 4.0 https://creativecommons.org/licenses/by-nc/4.0/",
         "! Credit: channel data by the AiSList community (Override92/AiSList), used under CC BY-NC 4.0",
-        "! Changes: converted from the original handle list to uBlock Origin page-block, warning and "
+        "! Changes: converted from the original handle list to " + ("" if compat else "uBlock Origin ") + "page-block, warning and "
         "card-hiding filters; duplicates removed. Unofficial - not affiliated with or endorsed by the "
         "AiSList authors.",
         "! Version: %s" % upstream_modified.replace("-", "."),
@@ -305,10 +340,10 @@ def main(src, dst):
                 # Every word must start with one of the chunk's first letters, otherwise the
                 # filter would never be handed the link for that channel.
                 assert all(w[first] in keys for w in chunk), "chunk/selector mismatch"
-            body = chunk_regex(chunk)
+            body = chunk_regex(chunk, fold=compat)
             bodies.append(body)
-            groups.append((chunk_anchor(keys, base), link_regex(body)))
-        self_check(words, bodies)
+            groups.append((chunk_anchor(keys, base), link_regex(body, compat)))
+        self_check(words, bodies, compat)
 
     def procedural(host, scope, tail):
         """One filter per chunk: <scope><links>:matches-attr(href=<regex>)<tail>."""
@@ -323,56 +358,79 @@ def main(src, dst):
     cards = ",".join(CONTAINERS)
     procedural("youtube.com", "", ":upward(:is(%s):not(:is(%s) *))" % (cards, cards))
 
-    # Each warning is scoped to the site it belongs to (www = desktop, m = mobile), so the filters
-    # for the other site are never loaded or run. The card hiding and the page-address warning
-    # apply to both.
-    #
-    # Warnings. A text notice can only be added by a CSS rule (::before/::after with `content`),
-    # while the decision "is this a listed channel?" is made by the filters above, which can
-    # only restyle an element. So each warning has two halves: a static rule that draws the
-    # notice but keeps it hidden unless a CSS variable is set, and filters that set that variable
-    # on a page element when the page shows a listed channel.
+    if not compat:
+        # Each warning is scoped to the site it belongs to (www = desktop, m = mobile), so the filters
+        # for the other site are never loaded or run. The card hiding and the page-address warning
+        # apply to both.
+        #
+        # Warnings. A text notice can only be added by a CSS rule (::before/::after with `content`),
+        # while the decision "is this a listed channel?" is made by the filters above, which can
+        # only restyle an element. So each warning has two halves: a static rule that draws the
+        # notice but keeps it hidden unless a CSS variable is set, and filters that set that variable
+        # on a page element when the page shows a listed channel.
 
-    # 3) Desktop video pages: notice above the title when the channel under the video is listed.
-    out.append("! --- Warning above the title on video pages ---")
-    out.append("www.youtube.com##ytd-watch-metadata #title::before:style(%s)" % WATCH_STYLE)
-    procedural("www.youtube.com", "ytd-watch-metadata #owner ",
-               ":upward(ytd-watch-metadata):style(--aislist-watch: block !important)")
+        # 3) Desktop video pages: notice above the title when the channel under the video is listed.
+        out.append("! --- Warning above the title on video pages ---")
+        out.append("www.youtube.com##ytd-watch-metadata #title::before:style(%s)" % WATCH_STYLE)
+        procedural("www.youtube.com", "ytd-watch-metadata #owner ",
+                   ":upward(ytd-watch-metadata):style(--aislist-watch: block !important)")
 
-    # 4) Desktop Shorts: the channel shown on the Short.
-    out.append("! --- Warning on desktop Shorts ---")
-    out.append("www.youtube.com##body::after:style(%s)" % floating("--aislist-dshort"))
-    # Seen on a real page: the Short's channel link (href="/@handle/shorts") is inside
-    # yt-reel-channel-bar-view-model. There was no [is-active] marker among its nearest ancestors,
-    # so the active Short can't be told apart: a neighbouring Short that is loaded into the page
-    # can also trigger the notice.
-    procedural("www.youtube.com", "yt-reel-channel-bar-view-model ",
-               ":upward(body):style(--aislist-dshort: visible !important)")
+        # 4) Desktop Shorts: the channel shown on the Short.
+        out.append("! --- Warning on desktop Shorts ---")
+        out.append("www.youtube.com##body::after:style(%s)" % floating("--aislist-dshort"))
+        # Seen on a real page: the Short's channel link (href="/@handle/shorts") is inside
+        # yt-reel-channel-bar-view-model. There was no [is-active] marker among its nearest ancestors,
+        # so the active Short can't be told apart: a neighbouring Short that is loaded into the page
+        # can also trigger the notice.
+        procedural("www.youtube.com", "yt-reel-channel-bar-view-model ",
+                   ":upward(body):style(--aislist-dshort: visible !important)")
 
-    # 5) Mobile video pages: the channel under the video.
-    out.append("! --- Warning on mobile video pages ---")
-    # (shares the floating label drawn for mobile Shorts below)
-    # The uploader link is inside the metadata section (seen on a real page: it sits in the
-    # action bar under the title); the owner renderer is kept for other layouts.
-    procedural("m.youtube.com", ":is(ytm-slim-video-metadata-section-renderer,ytm-slim-owner-renderer) ",
-               ":upward(body):style(--aislist-mshort: visible !important)")
+        # 5) Mobile video pages: the channel under the video.
+        out.append("! --- Warning on mobile video pages ---")
+        # (shares the floating label drawn for mobile Shorts below)
+        # The uploader link is inside the metadata section (seen on a real page: it sits in the
+        # action bar under the title); the owner renderer is kept for other layouts.
+        procedural("m.youtube.com", ":is(ytm-slim-video-metadata-section-renderer,ytm-slim-owner-renderer) ",
+                   ":upward(body):style(--aislist-mshort: visible !important)")
 
-    # 6) Mobile Shorts (m.youtube.com/shorts/...). A Short's address has no channel in it and the
-    #    mobile Shorts player's element names are not known, so this is deliberately generic: on
-    #    a /shorts/ address, any link to a listed channel switches the notice on. The address is
-    #    checked first, so the link search only runs on Shorts pages.
-    out.append("! --- Warning on mobile Shorts (m.youtube.com/shorts/ pages) ---")
-    out.append("m.youtube.com##body::after:style(%s)" % floating("--aislist-mshort"))
-    procedural("m.youtube.com", "body:matches-path(/^[/]shorts[/]/) ",
-               ":upward(body):style(--aislist-mshort: visible !important)")
+        # 6) Mobile Shorts (m.youtube.com/shorts/...). A Short's address has no channel in it and the
+        #    mobile Shorts player's element names are not known, so this is deliberately generic: on
+        #    a /shorts/ address, any link to a listed channel switches the notice on. The address is
+        #    checked first, so the link search only runs on Shorts pages.
+        out.append("! --- Warning on mobile Shorts (m.youtube.com/shorts/ pages) ---")
+        out.append("m.youtube.com##body::after:style(%s)" % floating("--aislist-mshort"))
+        procedural("m.youtube.com", "body:matches-path(/^[/]shorts[/]/) ",
+                   ":upward(body):style(--aislist-mshort: visible !important)")
 
-    # 7) Channel pages (e.g. after clicking Proceed on the page-block screen). A channel page has
-    #    no channel link to match, so it is detected from the page address with :matches-path()
-    #    (re-checked when you navigate inside YouTube).
-    out.append("! --- Warning on channel pages (detected from the page address) ---")
-    out.append("youtube.com##body::before:style(%s)" % floating("--aislist-channel-page"))
-    for _anchor, rx in groups:
-        out.append("youtube.com##body:matches-path(%s):style(--aislist-channel-page: visible !important)" % rx)
+        # 7) Channel pages (e.g. after clicking Proceed on the page-block screen). A channel page has
+        #    no channel link to match, so it is detected from the page address with :matches-path()
+        #    (re-checked when you navigate inside YouTube).
+        out.append("! --- Warning on channel pages (detected from the page address) ---")
+        out.append("youtube.com##body::before:style(%s)" % floating("--aislist-channel-page"))
+        for _anchor, rx in groups:
+            out.append("youtube.com##body:matches-path(%s):style(--aislist-channel-page: visible !important)" % rx)
+    else:
+        # Compatible profile. Only features that Brave's and AdGuard's engines have: no text notices
+        # (they need ::before/::after rules plus CSS variables) and no path checks on page-level
+        # elements. A listed channel is instead *marked*: the element around its name on video
+        # pages and Shorts gets a red tint/outline, and so does the whole page on mobile Shorts and
+        # channel pages. Every filter starts at a link, because blockers such as Brave only re-check
+        # elements that were just added to the page, and a link is always added when a page loads.
+        out.append("! --- Mark video pages and Shorts (red frame around the channel/title block) ---")
+        # One filter set for all three: desktop video page, mobile video page, desktop Short. The
+        # nearest of these elements around the channel link gets the frame.
+        procedural("youtube.com",
+                   ":is(ytd-watch-metadata #owner,ytm-slim-video-metadata-section-renderer,"
+                   "ytm-slim-owner-renderer,yt-reel-channel-bar-view-model) ",
+                   ":upward(:is(ytd-watch-metadata,ytm-slim-video-metadata-section-renderer,"
+                   "ytm-slim-owner-renderer,yt-reel-player-overlay-view-model)):style(%s)" % MARK_BOX)
+        # Mobile Shorts: the address is checked first (it has no channel in it), then any link to a
+        # listed channel on the page marks it. Generic, like the uBlock Origin version.
+        procedural("m.youtube.com", "", ":matches-path(/^.shorts./):upward(body):style(%s)" % MARK_PAGE)
+        out.append("! --- Mark channel pages (red frame, detected from the page address) ---")
+        for _anchor, rx in groups:
+            out.append("youtube.com##a:is([href^=\"/@\" i],[href^=\"/channel/\" i]):matches-path(%s)"
+                       ":upward(body):style(%s)" % (rx, MARK_PAGE))
 
     with open(dst, "w", encoding="utf-8", newline="\n") as fh:
         fh.write("\n".join(out) + "\n")
@@ -386,6 +444,7 @@ def main(src, dst):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
+    args = [a for a in sys.argv[1:] if a != "--compatible"]
+    if len(args) != 2:
         sys.exit(__doc__)
-    main(sys.argv[1], sys.argv[2])
+    main(args[0], args[1], compat="--compatible" in sys.argv)

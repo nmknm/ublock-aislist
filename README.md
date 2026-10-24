@@ -1,13 +1,25 @@
-# AiSList for uBlock Origin
+# AiSList for uBlock Origin, Brave and AdGuard
 
-An auto-updating, **unofficial** uBlock Origin version of the community
-[AiSList](https://github.com/Override92/AiSList) blocklist of AI-generated YouTube channels.
+Auto-updating, **unofficial** lists that bring the community
+[AiSList](https://github.com/Override92/AiSList) blocklist of AI-generated YouTube channels to
+your ad blocker. There are two lists, because blockers differ in what they can do:
+
+| | **uBlock Origin list** | **Compatible list** |
+|---|---|---|
+| File | `aislist_ublock.txt` | `aislist_compat.txt` |
+| Works in | uBlock Origin (full version, any browser it runs in, including Firefox on Android) | Brave (desktop and Android), AdGuard, and uBlock Origin too (see the table below) |
+| Listed channel's page | Warning screen with a **Proceed** button | Blocked page (Brave has no Proceed button; AdGuard shows its own blocked page, which I haven't tested) |
+| Video pages, Shorts, channel pages | Red text notice | Red frame around the page or channel block (no text) |
+| Listed channels' videos in feeds, search, suggestions | Hidden | Hidden |
+| Size | 3.8 MB | 6.5 MB |
+
+Use the uBlock Origin list if you use uBlock Origin: it can explain *why* something is flagged.
+Use the compatible list for Brave's built-in blocker (Shields), AdGuard and similar.
 
 A GitHub Action checks upstream every 6 hours, converts the list with `scripts/convert.py`, and
-commits `aislist_ublock.txt` only when something changed. uBlock Origin refreshes the list on its
-own (it asks for a 1-day refresh).
+commits both files only when something changed. Your blocker refreshes the list on its own.
 
-## Install
+## Install: uBlock Origin list
 
 **One click:** [Subscribe in uBlock Origin](https://subscribe.adblockplus.org/?location=https%3A%2F%2Fraw.githubusercontent.com%2Fnmknm%2Fublock-aislist%2Fmain%2Faislist_ublock.txt&title=AiSList%20for%20uBlock%20Origin)
 
@@ -19,7 +31,40 @@ https://raw.githubusercontent.com/nmknm/ublock-aislist/main/aislist_ublock.txt
 
 then click **Apply changes**.
 
-## What it does
+## Install: compatible list (Brave, AdGuard, and others)
+
+The address of the list is:
+
+```
+https://raw.githubusercontent.com/nmknm/ublock-aislist/main/aislist_compat.txt
+```
+
+- **Brave (desktop):** open `brave://settings/shields/filters` (or `brave://adblock`), choose
+  **Add filter list via URL** (or *Add custom filter list*), paste the address.
+- **Brave (Android):** Settings → Brave Shields & privacy → Content filtering, then add the list by URL.
+  These are the steps from Brave's help pages; I haven't tried them on a phone.
+- **AdGuard browser extension:** Filters → **Custom** → **Add custom filter**, paste the address.
+  The AdGuard apps (Windows, Mac, Android) also take custom filters by URL in their filter settings;
+  I haven't tested them.
+- **uBlock Origin** also accepts this list, but the uBlock Origin list above is the better choice there.
+
+### Which blockers work
+
+I ran the actual filtering code of each blocker (Brave's open-source engine and page script,
+AdGuard's `tsurlfilter` and `ExtendedCss` libraries, and uBlock Origin's own parser) on test pages built from
+real YouTube page structure. I did not run the full browsers or the apps.
+
+| Blocker | Compatible list |
+|---|---|
+| Brave Shields, desktop | Works (tested with Brave's engine and page script) |
+| Brave Shields, Android | Expected to work: Brave documents the same filtering engine on both |
+| AdGuard browser extension | Works (tested with AdGuard's engine and `ExtendedCss`) |
+| AdGuard apps (Windows, Mac, Android) | Expected to work (they use AdGuard's `ExtendedCss` too), but I haven't tested them |
+| uBlock Origin (full) | Works |
+| uBlock Origin Lite, Safari content blockers (1Blocker and similar), iOS blockers | **Not supported**: they can't run these filters |
+| Adblock Plus, AdBlock | Not supported; at most the channel-page blocking would apply (not tested) |
+
+## What the uBlock Origin list does
 
 For about 34,000 listed channels, it does three things:
 
@@ -41,6 +86,21 @@ Everything above also works on m.youtube.com: the "page blocked" screen, the cha
 cards (feed, search, suggestions), and the video-page and Shorts notices. Nested cards are hidden as a
 whole, so no empty gap is left in the feed.
 
+## What the compatible list does
+
+Same channels, fewer features. It can't show text, so it marks things with red frames:
+
+1. **Blocks listed channel pages** with your blocker's "blocked" page. Brave has no Proceed button, so
+   turn the list off if you need to open one.
+2. **Hides their videos** in feeds, search results and suggestions (desktop and mobile site).
+3. **Marks video pages and desktop Shorts** with a red frame around the title/channel block.
+4. **Marks channel pages and mobile Shorts** with a red frame around the whole page.
+
+Why these limits: Brave and AdGuard only restyle elements that already exist, so they can't add a
+sentence. The patterns are also written differently (no `/` inside them, no flags, letters spelled
+as `[aA]`) because Brave and AdGuard each reject something the uBlock Origin patterns use; that is
+why this list is larger.
+
 ## Performance
 
 An earlier version made the browser compare every link on a YouTube page with about 34,000 separate
@@ -53,7 +113,8 @@ link is tested once. On a test page of 300 video cards, in headless Chromium:
 | A new card appears (scrolling) | 59 ms | 8 ms |
 | A page of 12 new cards appears | 500 ms | 10 ms |
 
-The same cards are hidden as before. These are lab numbers from a simplified test page (YouTube's real
+For the compatible list, Brave's own page script scans a page of 300 cards with all its filters in about
+23 ms and handles 12 newly loaded cards in about 3 ms. The same cards are hidden as before. These are lab numbers from a simplified test page (YouTube's real
 pages are heavier), but the difference is large. The conversion script checks its own patterns on every
 update, and refuses to publish a list that doesn't match the channels exactly.
 
@@ -79,6 +140,10 @@ update, and refuses to publish a list that doesn't match the channels exactly.
   a Shorts address and the page contains a link to a listed channel. It doesn't know which Short is
   on screen, so it can appear a little early or late if a neighbouring Short from a listed channel is
   loaded in the page, or if a listed channel is linked elsewhere on the page (for example in comments).
+- **Compatible list: not yet seen on live YouTube.** It was tested with Brave's and AdGuard's own code
+  on test pages copied from real YouTube page structure, not in the full browsers. The red frames in
+  particular may look different on the real site. On Brave, a frame can appear a moment after the
+  page loads, because Brave only re-checks parts of the page that were just added.
 - YouTube changes its page structure from time to time; the notices or the hiding may stop working
   until the list is updated. If a notice doesn't appear, please open an issue saying which page you
   were on and in which browser.
