@@ -63,8 +63,10 @@ update, and refuses to publish a list that doesn't match the channels exactly.
   reloading, so clicking a channel from inside YouTube won't trigger it. The video-page notices and the
   hidden cards cover that case.
 - **Needs the full uBlock Origin, up to date.** It works in Brave on desktop with the uBlock Origin
-  extension installed (Brave still supports it). Brave's built-in Shields filter lists and mobile
-  browsers without extensions aren't supported. The card hiding and the notices use uBlock Origin's
+  extension installed (Brave still supports it). Brave's built-in Shields (custom filter lists) is not
+  supported: its parser accepts the list, but it has no "Proceed" screen, so listed channel pages would
+  simply be blocked, and the notices are not expected to work. Mobile browsers without extensions
+  aren't supported either. The card hiding and the notices use uBlock Origin's
   scripted ("procedural") filters, including `:matches-path`. They don't work in uBlock Origin Lite.
   If the notices never appear, update uBlock Origin. Detection by page address is reliable; the notice
   itself is a plain label that doesn't depend on YouTube's page structure.
