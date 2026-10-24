@@ -96,12 +96,12 @@ def main(src, dst):
         "[Adblock Plus 2.0]",
         "! Title: AiSList - YouTube AI Slop Channels (uBlock Origin)",
         "! Description: uBlock Origin version of the AiSList community blocklist. "
-        "Hides videos and channel cards from YouTube channels flagged as AI-generated content.",
+        "Warns before opening, and hides videos from, YouTube channels flagged as AI-generated content.",
         "! Homepage: https://aisloplist.com",
         "! Source: https://github.com/Override92/AiSList",
         "! License: CC BY-NC 4.0 https://creativecommons.org/licenses/by-nc/4.0/",
         "! Credit: channel data by the AiSList community (Override92/AiSList), used under CC BY-NC 4.0",
-        "! Changes: converted from the original handle list to uBlock Origin cosmetic filters; "
+        "! Changes: converted from the original handle list to uBlock Origin page-block and cosmetic filters; "
         "duplicates removed. Unofficial - not affiliated with or endorsed by the AiSList authors.",
         "! Version: %s" % upstream_modified.replace("-", "."),
         "! Upstream last modified: %s" % upstream_modified,
@@ -109,6 +109,17 @@ def main(src, dst):
         "! Entries: %d handles, %d channel IDs" % (len(handles), len(ids)),
         "!",
     ]
+    # 1) Page block: opening a listed channel's page shows uBO's "page blocked" screen
+    #    (with the list name and a Proceed button). Network filters match the URL as the
+    #    browser sends it, i.e. percent-encoded, and are case-insensitive by default.
+    #    `^` is a separator, so /@name does not also match /@name2.
+    out.append("! --- Page warning: opening a listed channel page ---")
+    for entry in handles + ids:
+        path = selectors_for(entry)[-1]  # percent-encoded spelling when it differs
+        out.append("||youtube.com%s^$document" % path)
+
+    # 2) Hide listed channels' video/channel/playlist cards in feeds and search results.
+    out.append("! --- Hide cards of listed channels ---")
     # `i` = case-insensitive match (YouTube handles are case-insensitive).
     sels = ['a[href="%s" i]' % href for h in handles for href in selectors_for(h)]
     sels += ['a[href="%s"]' % href for c in ids for href in selectors_for(c)]

@@ -21,14 +21,25 @@ then click **Apply changes**.
 
 ## What it does
 
-Hides video, channel and playlist cards on youtube.com that link to a listed channel
-(about 34,000 channels).
+For about 34,000 listed channels, it does two things:
+
+1. **Warns before opening a channel page.** If you open a listed channel's page (for example from a
+   link on another site, a bookmark, or a typed URL), uBlock Origin shows its "page blocked" screen,
+   naming this list, with a **Proceed** button.
+2. **Hides their videos.** Video, channel and playlist cards from listed channels are hidden in feeds,
+   search results and suggestions.
 
 ## Known limitations
 
+- **The warning only appears on full page loads.** YouTube moves between pages without reloading, so
+  clicking a channel from inside YouTube won't trigger it. Cards from listed channels are hidden, so
+  you should rarely reach one that way.
+- **Individual videos and Shorts aren't covered by the warning.** Their addresses don't contain the
+  channel name, so a filter list can't match them.
 - Shorts and other cards that don't expose a channel link may not be hidden.
-- The list is large, so YouTube pages may load a little slower.
 - YouTube changes its page structure from time to time; if cards stop being hidden, open an issue.
+- On the warning screen, choose plain **Proceed**. The "don't warn again" options apply to the whole
+  site, not to one channel.
 
 ## Wrong channel on the list?
 
