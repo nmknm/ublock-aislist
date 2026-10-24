@@ -70,11 +70,12 @@ update, and refuses to publish a list that doesn't match the channels exactly.
   the page, not before, so a card may be visible for a moment before it disappears.
 - **Shorts cards in feeds and shelves can't be hidden**, because they don't show a channel link. The
   notice appears once you open the Short.
+- **Desktop Shorts can't tell which Short is on screen.** The notice looks at the channel shown on the Short player (matched on a real page). If YouTube has the next or previous Short loaded and that one is from a listed channel, the notice can appear a little early or late.
 - **Mobile Shorts (m.youtube.com/shorts/...) use a generic check.** The notice appears when you are on
   a Shorts address and the page contains a link to a listed channel. It doesn't know which Short is
   on screen, so it can appear a little early or late if a neighbouring Short from a listed channel is
   loaded in the page, or if a listed channel is linked elsewhere on the page (for example in comments).
-- **Not yet confirmed on live YouTube for Shorts.** The mobile cards and the mobile video-page notice follow a real page's structure; the Shorts notices rely on YouTube's page
+- **Mobile Shorts are not yet confirmed on the live site.** Desktop Shorts, mobile cards and the mobile video-page notice follow a real page's structure; the mobile Shorts notice relies on YouTube's page
   structure (element names), which I could only check against test pages, not the real site. If a
   notice doesn't appear, please open an issue saying which page you were on and in which browser.
 - YouTube changes its page structure from time to time; the notices or the hiding may stop working

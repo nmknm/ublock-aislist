@@ -339,10 +339,14 @@ def main(src, dst):
     procedural("www.youtube.com", "ytd-watch-metadata #owner ",
                ":upward(ytd-watch-metadata):style(--aislist-watch: block !important)")
 
-    # 4) Desktop Shorts: the active Short's channel.
+    # 4) Desktop Shorts: the channel shown on the Short.
     out.append("! --- Warning on desktop Shorts ---")
     out.append("www.youtube.com##body::after:style(%s)" % floating("--aislist-dshort"))
-    procedural("www.youtube.com", "ytd-reel-video-renderer[is-active] ",
+    # Seen on a real page: the Short's channel link (href="/@handle/shorts") is inside
+    # yt-reel-channel-bar-view-model. There was no [is-active] marker among its nearest ancestors,
+    # so the active Short can't be told apart: a neighbouring Short that is loaded into the page
+    # can also trigger the notice.
+    procedural("www.youtube.com", "yt-reel-channel-bar-view-model ",
                ":upward(body):style(--aislist-dshort: visible !important)")
 
     # 5) Mobile video pages: the channel under the video.
