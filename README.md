@@ -29,8 +29,8 @@ For about 34,000 listed channels, it does three things:
 2. **Warns on video pages.** When you watch a video from a listed channel, a red notice appears above
    the video title: "This channel is on the AiSList AI-content list". This also works when you click
    through from inside YouTube.
-3. **Warns on Shorts and on the mobile site.** On desktop Shorts, and on video pages on
-   m.youtube.com, the same notice appears as a small floating label near the top of the screen.
+3. **Warns on Shorts and on the mobile site.** On desktop Shorts, on mobile Shorts, and on video pages
+   on m.youtube.com, the same notice appears as a small floating label near the top of the screen.
 4. **Warns on channel pages.** After you click **Proceed** on the "page blocked" screen, the same
    floating notice stays on the channel page, so you're reminded while you browse it. It's matched by
    the page address, so it also appears when you open a listed channel from inside YouTube.
@@ -49,13 +49,16 @@ The "page blocked" screen and the channel-page notice also work on m.youtube.com
   is a plain label that doesn't depend on YouTube's page structure.
 - **Shorts cards in feeds and shelves can't be hidden**, because they don't show a channel link. The
   notice appears once you open the Short.
-- **Shorts on the mobile site are not covered yet.**
+- **Mobile Shorts (m.youtube.com/shorts/...) use a generic check.** The notice appears when you are on
+  a Shorts address and the page contains a link to a listed channel. It doesn't know which Short is
+  on screen, so it can appear a little early or late if a neighbouring Short from a listed channel is
+  loaded in the page, or if a listed channel is linked elsewhere on the page (for example in comments).
 - **Not yet confirmed on live YouTube for Shorts and mobile.** These notices rely on YouTube's page
   structure (element names), which I could only check against test pages, not the real site. If a
   notice doesn't appear, please open an issue saying which page you were on and in which browser.
 - YouTube changes its page structure from time to time; the notices or the hiding may stop working
   until the list is updated.
-- The list is large (about 5.5 MB), so loading or updating it can take a moment.
+- The list is large (about 6 MB), so loading or updating it can take a moment.
 - On the warning screen, choose plain **Proceed**. The "don't warn again" options apply to the whole
   site, not to one channel.
 

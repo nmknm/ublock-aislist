@@ -190,6 +190,19 @@ def main(src, dst):
                    ":style(--aislist-channel-page: visible !important)"
                    % "|".join(paths[i:i + PATH_CHUNK]))
 
+    # 6) Warning on mobile Shorts (m.youtube.com/shorts/...). A Short's address has no channel
+    #    in it, and the mobile Shorts player's element names are not known, so this is
+    #    deliberately generic: on a /shorts/ address, if the page contains a link to a listed
+    #    channel, switch the notice on. The address is checked first, so the (expensive) link
+    #    search only runs on Shorts pages. Uses ::after because ytm-app::before is already used
+    #    by the mobile video-page warning above.
+    out.append("! --- Warning on mobile Shorts (m.youtube.com/shorts/ pages) ---")
+    out.append("m.youtube.com##ytm-app::after:style(%s; "
+               "visibility: var(--aislist-short, hidden) !important)" % FLOATING_STYLE)
+    for i in range(0, len(sels), CHUNK):
+        out.append("m.youtube.com##ytm-app:matches-path(/^[/]shorts[/]/):has(:is(%s))"
+                   ":style(--aislist-short: visible !important)" % ",".join(sels[i:i + CHUNK]))
+
     with open(dst, "w", encoding="utf-8", newline="\n") as fh:
         fh.write("\n".join(out) + "\n")
 
