@@ -62,7 +62,9 @@ update, and refuses to publish a list that doesn't match the channels exactly.
 - **The "page blocked" screen only appears on full page loads.** YouTube moves between pages without
   reloading, so clicking a channel from inside YouTube won't trigger it. The video-page notices and the
   hidden cards cover that case.
-- **Needs the full uBlock Origin, up to date.** The card hiding and the notices use uBlock Origin's
+- **Needs the full uBlock Origin, up to date.** It works in Brave on desktop with the uBlock Origin
+  extension installed (Brave still supports it). Brave's built-in Shields filter lists and mobile
+  browsers without extensions aren't supported. The card hiding and the notices use uBlock Origin's
   scripted ("procedural") filters, including `:matches-path`. They don't work in uBlock Origin Lite.
   If the notices never appear, update uBlock Origin. Detection by page address is reliable; the notice
   itself is a plain label that doesn't depend on YouTube's page structure.
@@ -75,11 +77,9 @@ update, and refuses to publish a list that doesn't match the channels exactly.
   a Shorts address and the page contains a link to a listed channel. It doesn't know which Short is
   on screen, so it can appear a little early or late if a neighbouring Short from a listed channel is
   loaded in the page, or if a listed channel is linked elsewhere on the page (for example in comments).
-- **Mobile Shorts are not yet confirmed on the live site.** Desktop Shorts, mobile cards and the mobile video-page notice follow a real page's structure; the mobile Shorts notice relies on YouTube's page
-  structure (element names), which I could only check against test pages, not the real site. If a
-  notice doesn't appear, please open an issue saying which page you were on and in which browser.
 - YouTube changes its page structure from time to time; the notices or the hiding may stop working
-  until the list is updated.
+  until the list is updated. If a notice doesn't appear, please open an issue saying which page you
+  were on and in which browser.
 - The list is about 3.6 MB, so loading or updating it takes a moment.
 - On the warning screen, choose plain **Proceed**. The "don't warn again" options apply to the whole
   site, not to one channel.
