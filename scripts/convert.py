@@ -64,6 +64,9 @@ FLOATING_STYLE = (
     "font: 600 14px/1.3 Roboto, Arial, sans-serif !important"
 )
 
+# Channels per address-matching regex (these are evaluated by uBO's script, so keep them modest).
+PATH_CHUNK = 200
+
 # Entries per generated filter line: keeps the file small and quick for uBO to parse.
 CHUNK = 100
 
@@ -171,6 +174,21 @@ def main(src, dst):
             "youtube.com##:is(ytd-shorts,ytm-app):has("
             ":is(ytd-reel-video-renderer[is-active],ytm-slim-owner-renderer) :is(%s))"
             "::before:style(%s)" % (",".join(sels[i:i + CHUNK]), FLOATING_STYLE))
+
+    # 5) Warning on channel pages (e.g. after clicking Proceed on the page-block screen).
+    #    A channel page has no channel link to match, so it is detected from the page address
+    #    instead, using uBO's :matches-path() (re-checked when you navigate inside YouTube).
+    #    That filter can only restyle an existing element, not add text, so it works as a
+    #    switch: a static rule draws the notice on body::before but keeps it hidden unless the
+    #    CSS variable --aislist-channel-page is "visible"; the address filters set that variable.
+    out.append("! --- Warning on channel pages (detected from the page address) ---")
+    out.append("youtube.com##body::before:style(%s; "
+               "visibility: var(--aislist-channel-page, hidden) !important)" % FLOATING_STYLE)
+    paths = [selectors_for(e)[-1][1:].replace(".", "[.]") for e in handles + ids]
+    for i in range(0, len(paths), PATH_CHUNK):
+        out.append("youtube.com##body:matches-path(/^/(%s)([/?]|$)/i)"
+                   ":style(--aislist-channel-page: visible !important)"
+                   % "|".join(paths[i:i + PATH_CHUNK]))
 
     with open(dst, "w", encoding="utf-8", newline="\n") as fh:
         fh.write("\n".join(out) + "\n")
