@@ -74,7 +74,7 @@ update, and refuses to publish a list that doesn't match the channels exactly.
   a Shorts address and the page contains a link to a listed channel. It doesn't know which Short is
   on screen, so it can appear a little early or late if a neighbouring Short from a listed channel is
   loaded in the page, or if a listed channel is linked elsewhere on the page (for example in comments).
-- **Not yet confirmed on live YouTube for Shorts and mobile.** These notices rely on YouTube's page
+- **Not yet confirmed on live YouTube for Shorts.** The mobile cards and the mobile video-page notice follow a real page's structure; the Shorts notices rely on YouTube's page
   structure (element names), which I could only check against test pages, not the real site. If a
   notice doesn't appear, please open an issue saying which page you were on and in which browser.
 - YouTube changes its page structure from time to time; the notices or the hiding may stop working

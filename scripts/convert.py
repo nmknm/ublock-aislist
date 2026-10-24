@@ -348,7 +348,9 @@ def main(src, dst):
     # 5) Mobile video pages: the channel under the video.
     out.append("! --- Warning on mobile video pages ---")
     out.append("m.youtube.com##ytm-app::before:style(%s)" % floating("--aislist-mwatch"))
-    procedural("m.youtube.com", "ytm-slim-owner-renderer ",
+    # The uploader link is inside the metadata section (seen on a real page: it sits in the
+    # action bar under the title); the owner renderer is kept for other layouts.
+    procedural("m.youtube.com", ":is(ytm-slim-video-metadata-section-renderer,ytm-slim-owner-renderer) ",
                ":upward(ytm-app):style(--aislist-mwatch: visible !important)")
 
     # 6) Mobile Shorts (m.youtube.com/shorts/...). A Short's address has no channel in it and the
