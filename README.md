@@ -37,7 +37,9 @@ For about 34,000 listed channels, it does three things:
 5. **Hides their videos.** Video, channel and playlist cards from listed channels are hidden in feeds,
    search results and suggestions.
 
-The "page blocked" screen and the channel-page notice also work on m.youtube.com.
+Everything above also works on m.youtube.com: the "page blocked" screen, the channel-page notice, hidden
+cards (feed, search, suggestions), and the video-page and Shorts notices. Nested cards are hidden as a
+whole, so no empty gap is left in the feed.
 
 ## Performance
 

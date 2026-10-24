@@ -39,6 +39,8 @@ CONTAINERS = [
     "ytm-rich-item-renderer",
     "ytm-video-with-context-renderer",
     "ytm-compact-video-renderer",
+    "ytm-compact-channel-renderer",
+    "ytm-compact-playlist-renderer",
 ]
 
 CHANNEL_ID_RE = re.compile(r"^UC[A-Za-z0-9_-]{22}$")
@@ -315,7 +317,11 @@ def main(src, dst):
 
     # 2) Hide listed channels' video/channel/playlist cards in feeds and search results.
     out.append("! --- Hide cards of listed channels ---")
-    procedural("youtube.com", "", ":upward(%s)" % ",".join(CONTAINERS))
+    # Cards nest (a grid cell wraps a lockup; on mobile a media item sits inside a rich item), and
+    # :upward() returns the nearest match. Match only a card that has no card around it, so the
+    # whole outer cell is hidden and no empty gap is left in the grid.
+    cards = ",".join(CONTAINERS)
+    procedural("youtube.com", "", ":upward(:is(%s):not(:is(%s) *))" % (cards, cards))
 
     # Each warning is scoped to the site it belongs to (www = desktop, m = mobile), so the filters
     # for the other site are never loaded or run. The card hiding and the page-address warning
