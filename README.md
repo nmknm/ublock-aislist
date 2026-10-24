@@ -152,9 +152,11 @@ update, and refuses to publish a list that doesn't match the channels exactly.
   `yt-reel-channel-bar-view-model` on Shorts) and tested on test pages, but not in a real browser.
   The layout of the mobile Shorts channel bar has not been checked, so the label may look different
   there. If a notice is missing or looks wrong, please open an issue saying which page and browser.
-- **Compatible list in Brave: marks can linger.** Brave only adds styles and never takes them back off,
-  so after you move to another video within YouTube, a notice can stay on an element YouTube reuses.
-  uBlock Origin and AdGuard remove it correctly.
+- **Compatible list in Brave: warnings can linger.** Brave only adds styles and never takes them back
+  off (confirmed on live YouTube). After you move from a listed channel or video to another page inside
+  YouTube, the old warning can stay on an element YouTube reuses, so it may show on an unlisted
+  channel. Reloading the page (F5) clears it. A filter list can't fix this. uBlock Origin and AdGuard
+  remove the warning correctly.
 - **Compatible list: tested with Brave's and AdGuard's own code** on test pages copied from real
   YouTube page structure. Live testing so far was in Brave only; AdGuard and the apps have not been
   run for real.
