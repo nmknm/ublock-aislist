@@ -38,6 +38,17 @@ CHANNEL_ID_RE = re.compile(r"^UC[A-Za-z0-9_-]{22}$")
 HANDLE_RE = re.compile(r"^@[^\s\"'\\\[\]{}()<>,;:#%/?&=+*^$|`~!]{1,200}$")
 LAST_MODIFIED_RE = re.compile(r"^!\s*Last Modified:\s*(\S+)", re.IGNORECASE)
 
+# Notice drawn above the video title on watch pages of listed channels.
+# (uBO forbids url(), backslashes and comments in :style(), so the text is plain Unicode.)
+WARNING_STYLE = (
+    'content: "⚠ This channel is on the AiSList AI-content list" !important; '
+    "display: block !important; width: fit-content !important; "
+    "background: #b00020 !important; color: #fff !important; "
+    "padding: 6px 12px !important; margin-bottom: 8px !important; "
+    "border-radius: 8px !important; "
+    "font: 600 14px/1.3 Roboto, Arial, sans-serif !important"
+)
+
 # Entries per generated filter line: keeps the file small and quick for uBO to parse.
 CHUNK = 100
 
@@ -96,12 +107,12 @@ def main(src, dst):
         "[Adblock Plus 2.0]",
         "! Title: AiSList - YouTube AI Slop Channels (uBlock Origin)",
         "! Description: uBlock Origin version of the AiSList community blocklist. "
-        "Warns before opening, and hides videos from, YouTube channels flagged as AI-generated content.",
+        "Warns about, and hides videos from, YouTube channels flagged as AI-generated content.",
         "! Homepage: https://aisloplist.com",
         "! Source: https://github.com/Override92/AiSList",
         "! License: CC BY-NC 4.0 https://creativecommons.org/licenses/by-nc/4.0/",
         "! Credit: channel data by the AiSList community (Override92/AiSList), used under CC BY-NC 4.0",
-        "! Changes: converted from the original handle list to uBlock Origin page-block and cosmetic filters; "
+        "! Changes: converted from the original handle list to uBlock Origin page-block, warning and cosmetic filters; "
         "duplicates removed. Unofficial - not affiliated with or endorsed by the AiSList authors.",
         "! Version: %s" % upstream_modified.replace("-", "."),
         "! Upstream last modified: %s" % upstream_modified,
@@ -125,6 +136,15 @@ def main(src, dst):
     sels += ['a[href="%s"]' % href for c in ids for href in selectors_for(c)]
     for i in range(0, len(sels), CHUNK):
         out.append(PREFIX + ",".join(sels[i:i + CHUNK]) + ")")
+
+    # 3) Warning on video pages. When the channel shown under the video is listed, a red
+    #    notice is drawn above the title. It is injected with a ::before pseudo-element
+    #    (CSS `content`), so it needs no script and also works when YouTube changes pages
+    #    without reloading.
+    out.append("! --- Warning above the title on video pages ---")
+    for i in range(0, len(sels), CHUNK):
+        out.append("youtube.com##ytd-watch-metadata:has(#owner :is(%s)) #title::before:style(%s)"
+                   % (",".join(sels[i:i + CHUNK]), WARNING_STYLE))
 
     with open(dst, "w", encoding="utf-8", newline="\n") as fh:
         fh.write("\n".join(out) + "\n")

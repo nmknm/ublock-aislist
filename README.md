@@ -21,23 +21,27 @@ then click **Apply changes**.
 
 ## What it does
 
-For about 34,000 listed channels, it does two things:
+For about 34,000 listed channels, it does three things:
 
 1. **Warns before opening a channel page.** If you open a listed channel's page (for example from a
    link on another site, a bookmark, or a typed URL), uBlock Origin shows its "page blocked" screen,
    naming this list, with a **Proceed** button.
-2. **Hides their videos.** Video, channel and playlist cards from listed channels are hidden in feeds,
+2. **Warns on video pages.** When you watch a video from a listed channel, a red notice appears above
+   the video title: "This channel is on the AiSList AI-content list". This also works when you click
+   through from inside YouTube.
+3. **Hides their videos.** Video, channel and playlist cards from listed channels are hidden in feeds,
    search results and suggestions.
 
 ## Known limitations
 
-- **The warning only appears on full page loads.** YouTube moves between pages without reloading, so
-  clicking a channel from inside YouTube won't trigger it. Cards from listed channels are hidden, so
-  you should rarely reach one that way.
-- **Individual videos and Shorts aren't covered by the warning.** Their addresses don't contain the
-  channel name, so a filter list can't match them.
-- Shorts and other cards that don't expose a channel link may not be hidden.
-- YouTube changes its page structure from time to time; if cards stop being hidden, open an issue.
+- **The "page blocked" screen only appears on full page loads.** YouTube moves between pages without
+  reloading, so clicking a channel from inside YouTube won't trigger it. The video-page notice and the
+  hidden cards cover that case.
+- **The video-page notice is desktop only** (www.youtube.com). It is not shown on Shorts or on
+  m.youtube.com.
+- It relies on how YouTube's pages are built today. If YouTube changes its page structure, the notice
+  or the hiding may stop working until the list is updated; please open an issue.
+- The list is large (about 4 MB), so loading or updating it can take a moment.
 - On the warning screen, choose plain **Proceed**. The "don't warn again" options apply to the whole
   site, not to one channel.
 
