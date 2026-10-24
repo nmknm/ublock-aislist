@@ -9,9 +9,10 @@ your ad blocker. There are two lists, because blockers differ in what they can d
 | File | `aislist_ublock.txt` | `aislist_compat.txt` |
 | Works in | uBlock Origin (full version, any browser it runs in, including Firefox on Android) | Brave (desktop and Android), AdGuard, and uBlock Origin too (see the table below) |
 | Listed channel's page | Warning screen with a **Proceed** button | Blocked page (Brave has no Proceed button; AdGuard shows its own blocked page, which I haven't tested) |
-| Video pages, Shorts, channel pages | Red text notice | Red frame around the page or channel block (no text) |
+| Video pages and desktop Shorts | Red text notice | Red text notice (a label above the title, or in front of the channel name on Shorts) |
+| Channel pages and mobile Shorts | Red text notice | Red frame around the page (no text yet) |
 | Listed channels' videos in feeds, search, suggestions | Hidden | Hidden |
-| Size | 3.8 MB | 6.5 MB |
+| Size | 3.8 MB | 7.8 MB |
 
 Use the uBlock Origin list if you use uBlock Origin: it can explain *why* something is flagged.
 Use the compatible list for Brave's built-in blocker (Shields), AdGuard and similar.
@@ -88,18 +89,25 @@ whole, so no empty gap is left in the feed.
 
 ## What the compatible list does
 
-Same channels, fewer features. It can't show text, so it marks things with red frames:
+Same channels, a bit fewer features:
 
 1. **Blocks listed channel pages** with your blocker's "blocked" page. Brave has no Proceed button, so
    turn the list off if you need to open one.
 2. **Hides their videos** in feeds, search results and suggestions (desktop and mobile site).
-3. **Marks video pages and desktop Shorts** with a red frame around the title/channel block.
-4. **Marks channel pages and mobile Shorts** with a red frame around the whole page.
+3. **Shows a text notice on video pages** (desktop and mobile site): "This channel is on the AiSList
+   AI-content list" above the title, with a red tint and frame.
+4. **Shows a short label on desktop Shorts**, in front of the channel name.
+5. **Marks channel pages and mobile Shorts** with a red frame around the whole page (no text yet).
 
-Why these limits: Brave and AdGuard only restyle elements that already exist, so they can't add a
-sentence. The patterns are also written differently (no `/` inside them, no flags, letters spelled
-as `[aA]`) because Brave and AdGuard each reject something the uBlock Origin patterns use; that is
-why this list is larger.
+How the text works without `::before` (which Brave and AdGuard can't add): an ordinary element is
+turned into a list item whose bullet is the notice text (`list-style: inside "..."`), so the
+browser draws the text in front of the element's content. It needs a plain block element, so it is
+used only where the page structure is known (video pages and the Shorts channel name). Channel
+pages and mobile Shorts have no element I can safely do this to yet, so they only get the frame.
+
+The patterns are also written differently from the uBlock Origin list (no `/` inside them, no flags,
+letters spelled as `[aA]`) because Brave and AdGuard each reject something the uBlock Origin patterns
+use; that is why this list is larger.
 
 ## Performance
 

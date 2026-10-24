@@ -53,6 +53,7 @@ HANDLE_RE = re.compile(r"^@[^\s\"'\\\[\]{}()<>,;:#%/?&=+*^$|`~!]{1,200}$")
 LAST_MODIFIED_RE = re.compile(r"^!\s*Last Modified:\s*(\S+)", re.IGNORECASE)
 
 NOTICE = "⚠ This channel is on the AiSList AI-content list"
+NOTICE_SHORT = "⚠ AiSList: AI-content channel"
 
 # Notice drawn above the video title on desktop watch pages of listed channels. It is shown by
 # switching `display` from none (default) to block through the variable --aislist-watch.
@@ -249,8 +250,18 @@ def self_check(words_all, bodies, compat=False):
             sys.exit("self-check failed: %r should not match" % cand)
 
 
-MARK_BOX = ("background: rgba(176,0,32,.10) !important; outline: 3px solid #b00020 !important; "
-            "outline-offset: -3px !important; border-radius: 12px !important")
+# Text without ::before/::after: a list marker can be any string (list-style: inside "text"), so
+# making an ordinary block element a list item makes the browser draw the text in front of its
+# content. Only a restyle of an existing element is needed, which every blocker can do.
+MARK_TEXT = ('display: list-item !important; list-style: inside "@@NOTICE@@" !important; '
+             "color: #e53935 !important; font-weight: 700 !important; "
+             "background: rgba(176,0,32,.10) !important; outline: 3px solid #e53935 !important; "
+             "outline-offset: -3px !important; border-radius: 12px !important; "
+             "padding: 8px 12px !important").replace("@@NOTICE@@", NOTICE)
+# Shorts: a small label in front of the channel name, white on red so it reads over the video.
+MARK_SHORT = ('display: list-item !important; list-style: inside "@@NOTICE@@" !important; '
+              "color: #fff !important; background: #b00020 !important; font-weight: 600 !important; "
+              "border-radius: 8px !important; padding: 4px 10px !important").replace("@@NOTICE@@", NOTICE_SHORT + " ")
 MARK_PAGE = "outline: 6px solid #b00020 !important; outline-offset: -6px !important"
 
 
@@ -416,14 +427,18 @@ def main(src, dst, compat=False):
         # pages and Shorts gets a red tint/outline, and so does the whole page on mobile Shorts and
         # channel pages. Every filter starts at a link, because blockers such as Brave only re-check
         # elements that were just added to the page, and a link is always added when a page loads.
-        out.append("! --- Mark video pages and Shorts (red frame around the channel/title block) ---")
-        # One filter set for all three: desktop video page, mobile video page, desktop Short. The
-        # nearest of these elements around the channel link gets the frame.
+        out.append("! --- Notice on video pages (text above the title, red tint) ---")
+        # Desktop and mobile video pages: the block around the title/channel becomes a list item whose
+        # marker is the notice.
         procedural("youtube.com",
                    ":is(ytd-watch-metadata #owner,ytm-slim-video-metadata-section-renderer,"
-                   "ytm-slim-owner-renderer,yt-reel-channel-bar-view-model) ",
+                   "ytm-slim-owner-renderer) ",
                    ":upward(:is(ytd-watch-metadata,ytm-slim-video-metadata-section-renderer,"
-                   "ytm-slim-owner-renderer,yt-reel-player-overlay-view-model)):style(%s)" % MARK_BOX)
+                   "ytm-slim-owner-renderer)):style(%s)" % MARK_TEXT)
+        out.append("! --- Notice on desktop Shorts (label in front of the channel name) ---")
+        # Seen on a real page: a > span > yt-reel-channel-bar-view-model; the span holds the name.
+        procedural("www.youtube.com", "yt-reel-channel-bar-view-model ",
+                   ":upward(yt-reel-channel-bar-view-model > span):style(%s)" % MARK_SHORT)
         # Mobile Shorts: the address is checked first (it has no channel in it), then any link to a
         # listed channel on the page marks it. Generic, like the uBlock Origin version.
         procedural("m.youtube.com", "", ":matches-path(/^.shorts./):upward(body):style(%s)" % MARK_PAGE)
