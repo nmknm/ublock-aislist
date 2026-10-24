@@ -341,26 +341,26 @@ def main(src, dst):
 
     # 4) Desktop Shorts: the active Short's channel.
     out.append("! --- Warning on desktop Shorts ---")
-    out.append("www.youtube.com##ytd-shorts::before:style(%s)" % floating("--aislist-dshort"))
+    out.append("www.youtube.com##body::after:style(%s)" % floating("--aislist-dshort"))
     procedural("www.youtube.com", "ytd-reel-video-renderer[is-active] ",
-               ":upward(ytd-shorts):style(--aislist-dshort: visible !important)")
+               ":upward(body):style(--aislist-dshort: visible !important)")
 
     # 5) Mobile video pages: the channel under the video.
     out.append("! --- Warning on mobile video pages ---")
-    out.append("m.youtube.com##ytm-app::before:style(%s)" % floating("--aislist-mwatch"))
+    # (shares the floating label drawn for mobile Shorts below)
     # The uploader link is inside the metadata section (seen on a real page: it sits in the
     # action bar under the title); the owner renderer is kept for other layouts.
     procedural("m.youtube.com", ":is(ytm-slim-video-metadata-section-renderer,ytm-slim-owner-renderer) ",
-               ":upward(ytm-app):style(--aislist-mwatch: visible !important)")
+               ":upward(body):style(--aislist-mshort: visible !important)")
 
     # 6) Mobile Shorts (m.youtube.com/shorts/...). A Short's address has no channel in it and the
     #    mobile Shorts player's element names are not known, so this is deliberately generic: on
     #    a /shorts/ address, any link to a listed channel switches the notice on. The address is
     #    checked first, so the link search only runs on Shorts pages.
     out.append("! --- Warning on mobile Shorts (m.youtube.com/shorts/ pages) ---")
-    out.append("m.youtube.com##ytm-app::after:style(%s)" % floating("--aislist-mshort"))
-    procedural("m.youtube.com", "ytm-app:matches-path(/^[/]shorts[/]/) ",
-               ":upward(ytm-app):style(--aislist-mshort: visible !important)")
+    out.append("m.youtube.com##body::after:style(%s)" % floating("--aislist-mshort"))
+    procedural("m.youtube.com", "body:matches-path(/^[/]shorts[/]/) ",
+               ":upward(body):style(--aislist-mshort: visible !important)")
 
     # 7) Channel pages (e.g. after clicking Proceed on the page-block screen). A channel page has
     #    no channel link to match, so it is detected from the page address with :matches-path()
