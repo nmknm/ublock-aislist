@@ -20,6 +20,28 @@ Use the compatible list for Brave's built-in blocker (Shields), AdGuard and simi
 A GitHub Action checks upstream every 6 hours, converts the list with `scripts/convert.py`, and
 commits both files only when something changed. Your blocker refreshes the list on its own.
 
+## Examples
+
+These images were rendered on simplified test pages that copy YouTube's real element structure, using
+the actual filters from the lists. They are **not screenshots of the live site**, so spacing and fonts
+on YouTube will differ.
+
+**Compatible list** (Brave, AdGuard, uBlock Origin)
+
+| Video page | Channel page |
+|---|---|
+| ![Red notice above the video title](docs/compat-video-page.png) | ![Red notice above a channel header](docs/compat-channel-page.png) |
+
+| Short (desktop and mobile site) | Feed: before and after |
+|---|---|
+| ![Label in front of the channel name on a Short](docs/compat-shorts.png) | ![Feed with two listed channels' videos](docs/feed-before.png) ![The same feed with them hidden](docs/feed-after.png) |
+
+**uBlock Origin list** (video page notice and the floating notice on channel pages)
+
+| Video page | Channel page |
+|---|---|
+| ![uBlock Origin list: notice above the video title](docs/ubo-video-page.png) | ![uBlock Origin list: floating notice on a channel page](docs/ubo-channel-page.png) |
+
 ## Install: uBlock Origin list
 
 **One click:** [Subscribe in uBlock Origin](https://subscribe.adblockplus.org/?location=https%3A%2F%2Fraw.githubusercontent.com%2Fnmknm%2Fublock-aislist%2Fmain%2Faislist_ublock.txt&title=AiSList%20for%20uBlock%20Origin)
