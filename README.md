@@ -8,11 +8,11 @@ your ad blocker. There are two lists, because blockers differ in what they can d
 |---|---|---|
 | File | `aislist_ublock.txt` | `aislist_compat.txt` |
 | Works in | uBlock Origin (full version, any browser it runs in, including Firefox on Android) | Brave (desktop and Android), AdGuard, and uBlock Origin too (see the table below) |
-| Listed channel's page | Warning screen with a **Proceed** button | Blocked page (Brave has no Proceed button; AdGuard shows its own blocked page, which I haven't tested) |
+| Listed channel's page | Warning screen naming AiSList, with a **Proceed** button | The blocker's own blocked page. Brave shows a Proceed button, but its text is a generic "This site may attempt to track you across other sites" (it never mentions AiSList), and you sometimes have to click Proceed twice. AdGuard's page is untested |
 | Video pages and desktop Shorts | Red text notice | Red text notice (a label above the title, or in front of the channel name on Shorts) |
-| Channel pages and mobile Shorts | Red text notice | Red frame around the page (no text yet) |
+| Channel pages (after Proceed) and mobile Shorts | Red text notice | **No notice yet** (see Known limitations) |
 | Listed channels' videos in feeds, search, suggestions | Hidden | Hidden |
-| Size | 3.8 MB | 7.8 MB |
+| Size | 3.8 MB | 5.2 MB |
 
 Use the uBlock Origin list if you use uBlock Origin: it can explain *why* something is flagged.
 Use the compatible list for Brave's built-in blocker (Shields), AdGuard and similar.
@@ -91,19 +91,20 @@ whole, so no empty gap is left in the feed.
 
 Same channels, a bit fewer features:
 
-1. **Blocks listed channel pages** with your blocker's "blocked" page. Brave has no Proceed button, so
-   turn the list off if you need to open one.
+1. **Blocks listed channel pages** with your blocker's "blocked" page. In Brave this page has a
+   Proceed button, but its warning text is Brave's generic tracking message, not AiSList's, and it
+   sometimes needs two clicks. That text can't be changed from a filter list.
 2. **Hides their videos** in feeds, search results and suggestions (desktop and mobile site).
 3. **Shows a text notice on video pages** (desktop and mobile site): "This channel is on the AiSList
    AI-content list" above the title, with a red tint and frame.
 4. **Shows a short label on desktop Shorts**, in front of the channel name.
-5. **Marks channel pages and mobile Shorts** with a red frame around the whole page (no text yet).
+
+There is currently **no notice on channel pages (after you click Proceed) or on mobile Shorts**.
 
 How the text works without `::before` (which Brave and AdGuard can't add): an ordinary element is
 turned into a list item whose bullet is the notice text (`list-style: inside "..."`), so the
 browser draws the text in front of the element's content. It needs a plain block element, so it is
-used only where the page structure is known (video pages and the Shorts channel name). Channel
-pages and mobile Shorts have no element I can safely do this to yet, so they only get the frame.
+used only where the page structure is known (video pages and the Shorts channel name).
 
 The patterns are also written differently from the uBlock Origin list (no `/` inside them, no flags,
 letters spelled as `[aA]`) because Brave and AdGuard each reject something the uBlock Origin patterns
@@ -132,10 +133,8 @@ update, and refuses to publish a list that doesn't match the channels exactly.
   reloading, so clicking a channel from inside YouTube won't trigger it. The video-page notices and the
   hidden cards cover that case.
 - **Needs the full uBlock Origin, up to date.** It works in Brave on desktop with the uBlock Origin
-  extension installed (Brave still supports it). Brave's built-in Shields (custom filter lists) is not
-  supported: its parser accepts the list, but it has no "Proceed" screen, so listed channel pages would
-  simply be blocked, and the notices are not expected to work. Mobile browsers without extensions
-  aren't supported either. The card hiding and the notices use uBlock Origin's
+  extension installed (Brave still supports it). For Brave's built-in Shields and for mobile browsers
+  without extensions, use the compatible list instead. The card hiding and the notices use uBlock Origin's
   scripted ("procedural") filters, including `:matches-path`. They don't work in uBlock Origin Lite.
   If the notices never appear, update uBlock Origin. Detection by page address is reliable; the notice
   itself is a plain label that doesn't depend on YouTube's page structure.
@@ -148,10 +147,18 @@ update, and refuses to publish a list that doesn't match the channels exactly.
   a Shorts address and the page contains a link to a listed channel. It doesn't know which Short is
   on screen, so it can appear a little early or late if a neighbouring Short from a listed channel is
   loaded in the page, or if a listed channel is linked elsewhere on the page (for example in comments).
-- **Compatible list: not yet seen on live YouTube.** It was tested with Brave's and AdGuard's own code
-  on test pages copied from real YouTube page structure, not in the full browsers. The red frames in
-  particular may look different on the real site. On Brave, a frame can appear a moment after the
-  page loads, because Brave only re-checks parts of the page that were just added.
+- **Compatible list: no notice on channel pages and mobile Shorts.** A channel page contains no link
+  to its own channel for a filter to start from, and Brave never removes a mark once it has set it,
+  so a mark placed on the page itself stays behind after you navigate. A notice needs an element that
+  exists only on those pages and is recreated each time; I don't know YouTube's names for them yet.
+  An earlier version used a page-level red frame, which showed up on the wrong pages in Brave, so it
+  was removed.
+- **Compatible list in Brave: marks can linger.** Brave only adds styles and never takes them back off,
+  so after you move to another video within YouTube, a notice can stay on an element YouTube reuses.
+  uBlock Origin and AdGuard remove it correctly.
+- **Compatible list: tested with Brave's and AdGuard's own code** on test pages copied from real
+  YouTube page structure. Live testing so far was in Brave only; AdGuard and the apps have not been
+  run for real.
 - YouTube changes its page structure from time to time; the notices or the hiding may stop working
   until the list is updated. If a notice doesn't appear, please open an issue saying which page you
   were on and in which browser.

@@ -439,13 +439,11 @@ def main(src, dst, compat=False):
         # Seen on a real page: a > span > yt-reel-channel-bar-view-model; the span holds the name.
         procedural("www.youtube.com", "yt-reel-channel-bar-view-model ",
                    ":upward(yt-reel-channel-bar-view-model > span):style(%s)" % MARK_SHORT)
-        # Mobile Shorts: the address is checked first (it has no channel in it), then any link to a
-        # listed channel on the page marks it. Generic, like the uBlock Origin version.
-        procedural("m.youtube.com", "", ":matches-path(/^.shorts./):upward(body):style(%s)" % MARK_PAGE)
-        out.append("! --- Mark channel pages (red frame, detected from the page address) ---")
-        for _anchor, rx in groups:
-            out.append("youtube.com##a:is([href^=\"/@\" i],[href^=\"/channel/\" i]):matches-path(%s)"
-                       ":upward(body):style(%s)" % (rx, MARK_PAGE))
+        # Channel pages and mobile Shorts are deliberately not marked here (yet). Two things were
+        # learned from testing in Brave: (1) a channel page has no link to its own channel that a
+        # filter could start from, and (2) Brave never removes a mark it has set, so a mark on a
+        # page-level element such as <body> stays on after you leave the page. Both need an element
+        # that exists only on that page, and its name is not known yet.
 
     with open(dst, "w", encoding="utf-8", newline="\n") as fh:
         fh.write("\n".join(out) + "\n")
