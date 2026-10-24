@@ -36,11 +36,21 @@ on YouTube will differ.
 |---|---|
 | ![Label in front of the channel name on a Short](docs/compat-shorts.png) | ![Feed with two listed channels' videos](docs/feed-before.png) ![The same feed with them hidden](docs/feed-after.png) |
 
-**uBlock Origin list** (video page notice and the floating notice on channel pages)
+**uBlock Origin list.** The notice is a red box above the title on video pages, and a floating box at
+the top of the screen on channel pages and Shorts. The page-blocked screen with the **Proceed** button is
+uBlock Origin's own page, so it isn't shown here.
 
-| Video page | Channel page |
+| Video page (desktop) | Channel page, after Proceed |
 |---|---|
 | ![uBlock Origin list: notice above the video title](docs/ubo-video-page.png) | ![uBlock Origin list: floating notice on a channel page](docs/ubo-channel-page.png) |
+
+| Short (desktop) | Video page (mobile site) |
+|---|---|
+| ![uBlock Origin list: floating notice on a Short](docs/ubo-shorts.png) | ![uBlock Origin list: floating notice on a mobile video page](docs/ubo-mobile-video.png) |
+
+| Short (mobile site) | Feed: before and after |
+|---|---|
+| ![uBlock Origin list: floating notice on a mobile Short](docs/ubo-mobile-shorts.png) | ![Feed with two listed channels' videos](docs/ubo-feed-before.png) ![The same feed with them hidden](docs/ubo-feed-after.png) |
 
 ## Install: uBlock Origin list
 
