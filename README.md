@@ -10,9 +10,9 @@ your ad blocker. There are two lists, because blockers differ in what they can d
 | Works in | uBlock Origin (full version, any browser it runs in, including Firefox on Android) | Brave (desktop and Android), AdGuard, and uBlock Origin too (see the table below) |
 | Listed channel's page | Warning screen naming AiSList, with a **Proceed** button | The blocker's own blocked page. Brave shows a Proceed button, but its text is a generic "This site may attempt to track you across other sites" (it never mentions AiSList), and you sometimes have to click Proceed twice. AdGuard's page is untested |
 | Video pages and desktop Shorts | Red text notice | Red text notice (a label above the title, or in front of the channel name on Shorts) |
-| Channel pages (after Proceed) and mobile Shorts | Red text notice | **No notice yet** (see Known limitations) |
+| Channel pages (after Proceed) and mobile Shorts | Red text notice | Red text notice (above the channel header, or in front of the channel name on Shorts) |
 | Listed channels' videos in feeds, search, suggestions | Hidden | Hidden |
-| Size | 3.8 MB | 5.2 MB |
+| Size | 3.8 MB | 6.5 MB |
 
 Use the uBlock Origin list if you use uBlock Origin: it can explain *why* something is flagged.
 Use the compatible list for Brave's built-in blocker (Shields), AdGuard and similar.
@@ -97,14 +97,14 @@ Same channels, a bit fewer features:
 2. **Hides their videos** in feeds, search results and suggestions (desktop and mobile site).
 3. **Shows a text notice on video pages** (desktop and mobile site): "This channel is on the AiSList
    AI-content list" above the title, with a red tint and frame.
-4. **Shows a short label on desktop Shorts**, in front of the channel name.
-
-There is currently **no notice on channel pages (after you click Proceed) or on mobile Shorts**.
+4. **Shows a short label on Shorts** (desktop and mobile site), in front of the channel name.
+5. **Shows the text notice on channel pages** (desktop and mobile site) above the channel header, for
+   example after you click Proceed. The channel is recognised from the page address.
 
 How the text works without `::before` (which Brave and AdGuard can't add): an ordinary element is
 turned into a list item whose bullet is the notice text (`list-style: inside "..."`), so the
 browser draws the text in front of the element's content. It needs a plain block element, so it is
-used only where the page structure is known (video pages and the Shorts channel name).
+used only where the page structure is known (video pages, channel page headers and the Shorts channel name).
 
 The patterns are also written differently from the uBlock Origin list (no `/` inside them, no flags,
 letters spelled as `[aA]`) because Brave and AdGuard each reject something the uBlock Origin patterns
@@ -123,7 +123,7 @@ link is tested once. On a test page of 300 video cards, in headless Chromium:
 | A page of 12 new cards appears | 500 ms | 10 ms |
 
 For the compatible list, Brave's own page script scans a page of 300 cards with all its filters in about
-23 ms and handles 12 newly loaded cards in about 3 ms. The same cards are hidden as before. These are lab numbers from a simplified test page (YouTube's real
+44 ms and handles 12 newly loaded cards in about 3 ms. The same cards are hidden as before. These are lab numbers from a simplified test page (YouTube's real
 pages are heavier), but the difference is large. The conversion script checks its own patterns on every
 update, and refuses to publish a list that doesn't match the channels exactly.
 
@@ -147,12 +147,11 @@ update, and refuses to publish a list that doesn't match the channels exactly.
   a Shorts address and the page contains a link to a listed channel. It doesn't know which Short is
   on screen, so it can appear a little early or late if a neighbouring Short from a listed channel is
   loaded in the page, or if a listed channel is linked elsewhere on the page (for example in comments).
-- **Compatible list: no notice on channel pages and mobile Shorts.** A channel page contains no link
-  to its own channel for a filter to start from, and Brave never removes a mark once it has set it,
-  so a mark placed on the page itself stays behind after you navigate. A notice needs an element that
-  exists only on those pages and is recreated each time; I don't know YouTube's names for them yet.
-  An earlier version used a page-level red frame, which showed up on the wrong pages in Brave, so it
-  was removed.
+- **Compatible list: channel pages and mobile Shorts are new and untested on the live site.** They were
+  built from the element names of real pages (`yt-page-header-view-model` on channel pages,
+  `yt-reel-channel-bar-view-model` on Shorts) and tested on test pages, but not in a real browser.
+  The layout of the mobile Shorts channel bar has not been checked, so the label may look different
+  there. If a notice is missing or looks wrong, please open an issue saying which page and browser.
 - **Compatible list in Brave: marks can linger.** Brave only adds styles and never takes them back off,
   so after you move to another video within YouTube, a notice can stay on an element YouTube reuses.
   uBlock Origin and AdGuard remove it correctly.

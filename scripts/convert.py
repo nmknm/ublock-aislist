@@ -437,13 +437,19 @@ def main(src, dst, compat=False):
                    "ytm-slim-owner-renderer)):style(%s)" % MARK_TEXT)
         out.append("! --- Notice on desktop Shorts (label in front of the channel name) ---")
         # Seen on a real page: a > span > yt-reel-channel-bar-view-model; the span holds the name.
-        procedural("www.youtube.com", "yt-reel-channel-bar-view-model ",
+        # The mobile Shorts player uses the same yt-reel-channel-bar-view-model element, so the same
+        # filter is used on both sites (the mobile layout inside it has not been checked).
+        procedural("youtube.com", "yt-reel-channel-bar-view-model ",
                    ":upward(yt-reel-channel-bar-view-model > span):style(%s)" % MARK_SHORT)
-        # Channel pages and mobile Shorts are deliberately not marked here (yet). Two things were
-        # learned from testing in Brave: (1) a channel page has no link to its own channel that a
-        # filter could start from, and (2) Brave never removes a mark it has set, so a mark on a
-        # page-level element such as <body> stays on after you leave the page. Both need an element
-        # that exists only on that page, and its name is not known yet.
+        out.append("! --- Notice on channel pages (text above the channel header) ---")
+        # Seen on real pages (desktop and mobile): a channel page has no link to its own channel, but
+        # it has a yt-page-header-view-model (the banner/avatar/name block). The page address says
+        # which channel it is (:matches-path), so no link is needed. The header is not the page's
+        # <body>: a mark on <body> would stay behind after navigating away in Brave, which never
+        # removes styles.
+        for _anchor, rx in groups:
+            out.append("youtube.com##yt-page-header-view-model:matches-path(%s):style(%s)" % (rx, MARK_TEXT))
+        # Mobile Shorts are marked by the Shorts filter above (same yt-reel-channel-bar-view-model).
 
     with open(dst, "w", encoding="utf-8", newline="\n") as fh:
         fh.write("\n".join(out) + "\n")
