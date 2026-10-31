@@ -91,11 +91,18 @@ def floating(var):
 CHUNK = 1500
 
 
+def _low(text):
+    """Lower-case a handle one character at a time, leaving alone letters whose lower-case form is
+    not a single character (a capital dotted I becomes "i" plus a combining dot, which no longer
+    matches the address the browser has)."""
+    return "".join(c.lower() if len(c.lower()) == 1 else c for c in text)
+
+
 def spellings(entry):
     """Text after the leading slash in the page address, lower-cased, for one entry:
     '@name' (and its percent-encoded twin for non-ASCII handles), or 'channel/UC...'."""
     if entry.startswith("@"):
-        out = {entry.lower()}
+        out = {_low(entry)}
         encoded = quote(entry, safe="@-_.")
         out.add(encoded.lower())
         return out
@@ -121,12 +128,19 @@ def _trie(words):
     return root
 
 
+def _up(ch):
+    """Upper-case form of one character, or the character itself when that would not be a single
+    character (e.g. the German sharp s becomes "SS"); such letters get no [xX] class."""
+    u = ch.upper()
+    return u if len(u) == 1 else ch
+
+
 def _esc(ch, fold=False):
     # Only "." can occur among the characters HANDLE_RE and the ID pattern allow.
     if ch == ".":
         return "[.]"
     # fold: spell out case-insensitivity (a -> [aA]) for blockers whose regexes cannot take flags.
-    return "[%s%s]" % (ch, ch.upper()) if fold and ch.isalpha() and ch.upper() != ch else ch
+    return "[%s%s]" % (ch, _up(ch)) if fold and ch.isalpha() and _up(ch) != ch else ch
 
 
 def _regex(node, fold=False):
@@ -140,7 +154,7 @@ def _regex(node, fold=False):
     if len(leaves) >= 2:
         plain = "".join(c for c in leaves if c not in ".-")
         if fold:
-            plain += "".join(c.upper() for c in plain if c.isalpha() and c.upper() != c)
+            plain += "".join(_up(c) for c in plain if c.isalpha() and _up(c) != c)
         alts.append("[%s%s%s]" % (plain, "." if "." in leaves else "", "-" if "-" in leaves else ""))
         kids = [k for k in kids if k not in leaves]
     alts += [_esc(k, fold) + _regex(node[k], fold) for k in kids]
@@ -236,7 +250,8 @@ def self_check(words_all, bodies, compat=False):
         for suffix in ("", "/videos", "?si=x"):
             if not matches("/" + w + suffix):
                 sys.exit("self-check failed: %r is not matched" % (w + suffix))
-            if compat and not (matches("/" + w.upper() + suffix) and matches("/" + w.swapcase() + suffix)):
+            if compat and not (matches("/" + "".join(map(_up, w)) + suffix)
+                               and matches("/" + "".join(_up(c) if i % 2 else c for i, c in enumerate(w)) + suffix)):
                 sys.exit("self-check failed: %r is not matched in other letter cases" % (w + suffix))
     rng = random.Random(1234)
     sample = rng.sample(words_all, min(len(words_all), 4000))
